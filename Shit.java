@@ -1,6 +1,9 @@
-public class Shit extends Object
+import java.awt.*;
+
+public class Shit extends DropObject
 {
-    public Shit()
+    public Shit(int x, int y)
     {
+        super(x, y, Color.BLACK);
     }
 }

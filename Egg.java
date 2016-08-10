@@ -1,6 +1,9 @@
-public class Egg extends Object
+import java.awt.*;
+
+public class Egg extends DropObject
 {
-    public Egg()
+    public Egg(int x, int y)
     {
+        super(x, y, Color.YELLOW);
     }
 }

@@ -1,10 +1,10 @@
 import java.awt.*;
 
-public class Duck extends Animal
+public class Geese extends Animal
 {
-    public Duck()
+    public Geese()
     {
-        super(Color.GREEN);   
+        super(Color.RED);
     }
     
     // Paint itself given the Graphics context

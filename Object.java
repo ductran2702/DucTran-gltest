@@ -1,13 +1,17 @@
+import java.awt.*;
+
 public class Object
 {
-    private int speed;
-    private int x;
-    private int y;
+    protected int x;
+    protected int y;
+    protected Color color;
     /**
      * Constructor for objects of class Objects
      */
-    public Object()
+    public Object(int x, int y, Color color)
     {
-        speed = 1;
+        this.x = x;
+        this.y = y;
+        this.color = color;
     }
 }
