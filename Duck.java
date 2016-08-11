@@ -1,15 +1,23 @@
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import javax.imageio.ImageIO;
+import java.io.IOException;
 
 public class Duck extends Animal
 {
+    protected BufferedImage image;
     public Duck()
     {
-        super(Color.GREEN);   
+        super();
+        try {                
+            image = ImageIO.read(new File("duck.png"));
+        } catch (IOException ex) {
+        }
     }
     
     // Paint itself given the Graphics context
     public void paint(Graphics g) {
-        g.setColor(color);
-        g.fillOval(x, y, 40, 40); // Fill a oval
+        g.drawImage(image, x, y, null);
     }
 }

@@ -2,17 +2,26 @@ import java.util.Random;
 import java.awt.*;       // Using AWT's Graphics and Color
 import java.awt.event.*; // Using AWT's event classes and listener interfaces
 import javax.swing.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import javax.imageio.ImageIO;
+import java.io.IOException;
+
 
 public class Hen extends Animal
 {
+    protected BufferedImage image;
     public Hen()
     {
-        super(Color.YELLOW);
+        super();
+        try {                
+            image = ImageIO.read(new File("hen.png"));
+        } catch (IOException ex) {
+        }
     }
 
     // Paint itself given the Graphics context
     public void paint(Graphics g) {
-        g.setColor(color);
-        g.fillOval(x, y, 40, 40); // Fill a oval
+        g.drawImage(image, x, y, null);
     }
 }

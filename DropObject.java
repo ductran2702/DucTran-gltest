@@ -1,19 +1,15 @@
 import java.awt.*;
 
-public class DropObject extends Object
+public abstract class DropObject extends Object
 {
     protected int width;
     protected int height;
-    public DropObject(int x, int y, Color color)
+    public DropObject(int x, int y)
     {
-        super(x, y, color);
-        width = 20;
-        height = 20;
+        super(x, y);
+        width = 30;
+        height = 30;
     }
 
-    public void paint(Graphics g)
-    {
-        g.setColor(color);
-        g.fillOval(x, y, width, height); // Fill a oval
-    }
+    abstract public void paint(Graphics g);
 }

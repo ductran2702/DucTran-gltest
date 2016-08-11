@@ -8,10 +8,9 @@ public class Object
     /**
      * Constructor for objects of class Objects
      */
-    public Object(int x, int y, Color color)
+    public Object(int x, int y)
     {
         this.x = x;
         this.y = y;
-        this.color = color;
     }
 }

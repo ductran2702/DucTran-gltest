@@ -8,14 +8,12 @@ public class Animal
     protected int width;
     protected int height;
     protected DropObject object;
-    protected Color color;
 
-    public Animal(Color color) {
+    public Animal() {
         this.x = FrameCanvas.CANVAS_WIDTH/2;
-        this.y = FrameCanvas.CANVAS_HEIGHT/6;
-        this.width = 40;
-        this.height = 40;
-        this.color = color;
+        this.y = FrameCanvas.CANVAS_HEIGHT/10;
+        this.width = 82;
+        this.height = 88;
         Random rand = new Random();
         int d = rand.nextInt(2);
         if(d == 0)
