@@ -31,6 +31,7 @@ public class FrameCanvas extends JFrame implements MouseMotionListener {
     private Image basketImage;
     private boolean isGameOver;
     private boolean isSlowDown;
+    private boolean isExplosable;
     private int slowTime = 20;
     private int exploseTime = 20;
 
@@ -71,7 +72,7 @@ public class FrameCanvas extends JFrame implements MouseMotionListener {
                     }
                 }
             });
-
+        isExplosable = true;
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setTitle("Catch the egg.");
         pack();            // pack all the components in the JFrame
@@ -124,24 +125,68 @@ public class FrameCanvas extends JFrame implements MouseMotionListener {
     }
 
     private void explose(){
-        for(int i = 0; i < henList.size(); i++){
-            if(henList.get(i).object1 != null)
-                henList.get(i).object1 = null;
-            if(henList.get(i).object2 != null)
-                henList.get(i).object2 = null;
-        }
-        for(int i = 0; i < duckList.size(); i++){
-            if(duckList.get(i).object1 != null)
-                duckList.get(i).object1 = null;
-            if(duckList.get(i).object2 != null)
-                duckList.get(i).object2 = null;
-        }
-        for(int i = 0; i < geeseList.size(); i++){
-            if(geeseList.get(i).object1 != null)
-                geeseList.get(i).object1 = null;
-            if(geeseList.get(i).object2 != null)
-                geeseList.get(i).object2 = null;
-        }
+        if(!isExplosable)
+            return;
+        Thread thread = new Thread(){
+                public void run(){
+                    isExplosable = false;
+                    for(int i = 0; i < henList.size(); i++){
+                        if(henList.get(i).object1 != null)
+                            henList.get(i).object1.setExplosed(true);
+                        if(henList.get(i).object2 != null)
+                            henList.get(i).object2.setExplosed(true);
+                    }
+                    for(int i = 0; i < duckList.size(); i++){
+                        if(duckList.get(i).object1 != null)
+                            duckList.get(i).object1.setExplosed(true);
+                        if(duckList.get(i).object2 != null)
+                            duckList.get(i).object2.setExplosed(true);
+                    }
+                    for(int i = 0; i < geeseList.size(); i++){
+                        if(geeseList.get(i).object1 != null)
+                            geeseList.get(i).object1.setExplosed(true);
+                        if(geeseList.get(i).object2 != null)
+                            geeseList.get(i).object2.setExplosed(true);
+                    }
+                    try {
+                        this.sleep(500);
+                    }catch(InterruptedException ex) {
+                        this.currentThread().interrupt();
+                    }
+                    for(int i = 0; i < henList.size(); i++){
+                        if(henList.get(i).object1 != null)
+                            henList.get(i).object1 = null;
+                        if(henList.get(i).object2 != null)
+                            henList.get(i).object2 = null;
+                    }
+                    for(int i = 0; i < duckList.size(); i++){
+                        if(duckList.get(i).object1 != null)
+                            duckList.get(i).object1 = null;
+                        if(duckList.get(i).object2 != null)
+                            duckList.get(i).object2 = null;
+                    }
+                    for(int i = 0; i < geeseList.size(); i++){
+                        if(geeseList.get(i).object1 != null)
+                            geeseList.get(i).object1 = null;
+                        if(geeseList.get(i).object2 != null)
+                            geeseList.get(i).object2 = null;
+                    }
+                    while(!this.currentThread().isInterrupted()){
+                        exploseTime--;
+                        if(exploseTime == 0){
+                            isExplosable = true;
+                            exploseTime = 20;
+                            this.currentThread().interrupt();
+                        }
+                        try {
+                            this.sleep(1000);
+                        }catch(InterruptedException ex) {
+                            this.currentThread().interrupt();
+                        }
+                    }
+                }
+            };
+        thread.start();
     }
 
     private void slowDown(){
@@ -150,8 +195,7 @@ public class FrameCanvas extends JFrame implements MouseMotionListener {
         Thread thread = new Thread(){
                 public void run(){
                     isSlowDown = true;
-                    int k = 0;
-                    while(true){
+                    while(!this.currentThread().isInterrupted()){
                         if(isSlowDown){
                             slowTime--;
                             if(slowTime > 10)
@@ -168,7 +212,6 @@ public class FrameCanvas extends JFrame implements MouseMotionListener {
                             }catch(InterruptedException ex) {
                                 this.currentThread().interrupt();
                             }
-                            k++;
                         }
                     }
                 }
@@ -182,7 +225,6 @@ public class FrameCanvas extends JFrame implements MouseMotionListener {
             _speed = 5;
         else
             _speed = (score / 20) * 5 + 10;
-        System.out.println("_speed=" + _speed);
         for(int i = 0; i < henList.size(); i++){
             if(henList.get(i).object1 != null)
                 henList.get(i).object1.speed = _speed;
@@ -194,7 +236,6 @@ public class FrameCanvas extends JFrame implements MouseMotionListener {
                 duckList.get(i).object1.speed = _speed;
             if(duckList.get(i).object2 != null)
                 duckList.get(i).object2.speed = _speed;
-
         }
         for(int i = 0; i < geeseList.size(); i++){
             if(geeseList.get(i).object1 != null)
@@ -351,28 +392,29 @@ public class FrameCanvas extends JFrame implements MouseMotionListener {
             g.drawLine(0, CANVAS_HEIGHT * 5/6, CANVAS_WIDTH, CANVAS_HEIGHT * 5/6);
             g.setColor(Color.YELLOW);
             g.setFont(monoFont);
-            canvas.repaint(0, 0, 60, 60);
+            canvas.repaint();
+            //canvas.repaint(0, 0, 60, 60);
             g.drawString("Score:" + score, 30, 40);
             g.setColor(Color.YELLOW);
-            canvas.repaint(500, 0, 60, 60);
+            //canvas.repaint(500, 0, 60, 60);
             g.drawString("Egg:" + egg, 500, 40);
-            canvas.repaint(300, 0, 60, 60);
+            //canvas.repaint(300, 0, 60, 60);
             g.setColor(Color.BLACK);
             g.drawString("Shit:" + shit, 300, 40);
             if(egg <= 0 || shit <= 0){
                 isGameOver = true;
                 g.setFont(bigFont);
-                canvas.repaint();
+                //canvas.repaint();
                 g.setColor(Color.RED);
                 g.drawString("GAME OVER !!!", CANVAS_HEIGHT/5, CANVAS_WIDTH/3);
             }
             g.setColor(Color.GREEN);
             g.setFont(monoFont);
-            canvas.repaint(30, 550, 60, 60);
-            g.drawString("Slowable time:" + slowTime, 30, 550);
+            //canvas.repaint(10, 550, 60, 60);
+            g.drawString("Slowable time:" + slowTime, 10, 550);
             g.setColor(Color.RED);
-            canvas.repaint(450, 550, 60, 60);
-            g.drawString("Explose time:" + exploseTime, 450, 550);
+            //canvas.repaint(400, 550, 200, 60);
+            g.drawString("Explosion time:" + exploseTime, 400, 550);
             basket.paint(g);
             for(int i = 0; i < henList.size(); i++){
                 henList.get(i).paint(g);

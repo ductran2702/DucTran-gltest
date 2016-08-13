@@ -16,9 +16,12 @@ public class Egg extends DropObject
         } catch (IOException ex) {
         }
     }
-    
+
     public void paint(Graphics g)
     {
-        g.drawImage(image, x, y, width, height, null);
+        if(!isExplosed)
+            g.drawImage(image, x, y, width, height, null);
+        else
+            g.drawImage(explosionImage, x, y, width, height, null);
     }
 }

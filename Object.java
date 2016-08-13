@@ -1,10 +1,16 @@
 import java.awt.*;
+import java.io.File;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
+import java.io.IOException;
 
 public class Object
 {
     protected int x;
     protected int y;
-    protected Color color;
+    protected boolean isExplosed;
+    protected BufferedImage explosionImage;
+    
     /**
      * Constructor for objects of class Objects
      */
@@ -12,5 +18,14 @@ public class Object
     {
         this.x = x;
         this.y = y;
+        this.isExplosed = false;
+        try {
+            explosionImage = ImageIO.read(new File("explosion.png"));
+        } catch (IOException ex) {
+        }
+    }
+    
+    public void setExplosed(boolean b){
+        isExplosed = b;
     }
 }
