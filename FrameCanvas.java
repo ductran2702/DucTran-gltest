@@ -30,7 +30,8 @@ public class FrameCanvas extends JFrame implements MouseMotionListener {
 
     private Image basketImage;
     private boolean isGameOver;
-    private boolean isSlowDown;
+    private boolean isSlowingDownTime;
+    private boolean isSlow;
     private boolean isExplosable;
     private int slowTime = 20;
     private int exploseTime = 20;
@@ -173,7 +174,7 @@ public class FrameCanvas extends JFrame implements MouseMotionListener {
                     }
                     while(!this.currentThread().isInterrupted()){
                         exploseTime--;
-                        if(exploseTime == 0){
+                        if(exploseTime == -1){
                             isExplosable = true;
                             exploseTime = 20;
                             this.currentThread().interrupt();
@@ -190,20 +191,20 @@ public class FrameCanvas extends JFrame implements MouseMotionListener {
     }
 
     private void slowDown(){
-        if(isSlowDown)
+        if(isSlowingDownTime)
             return;
         Thread thread = new Thread(){
                 public void run(){
-                    isSlowDown = true;
+                    isSlowingDownTime = true;
                     while(!this.currentThread().isInterrupted()){
-                        if(isSlowDown){
+                        if(isSlowingDownTime){
                             slowTime--;
                             if(slowTime > 10)
-                                setObjectSpeed(true);
+                                isSlow = true;
                             else if(slowTime == 10)
-                                setObjectSpeed(false);
-                            else if(slowTime == 0) {
-                                isSlowDown = false;
+                                isSlow = false;
+                            else if(slowTime == -1) {
+                                isSlowingDownTime = false;
                                 slowTime = 20;
                                 this.currentThread().interrupt();
                             }
@@ -217,32 +218,6 @@ public class FrameCanvas extends JFrame implements MouseMotionListener {
                 }
             };
         thread.start();
-    }
-
-    private void setObjectSpeed(boolean isSlow){
-        int _speed;
-        if(isSlow)
-            _speed = 5;
-        else
-            _speed = (score / 20) * 5 + 10;
-        for(int i = 0; i < henList.size(); i++){
-            if(henList.get(i).object1 != null)
-                henList.get(i).object1.speed = _speed;
-            if(henList.get(i).object2 != null)
-                henList.get(i).object2.speed = _speed;
-        }
-        for(int i = 0; i < duckList.size(); i++){
-            if(duckList.get(i).object1 != null)
-                duckList.get(i).object1.speed = _speed;
-            if(duckList.get(i).object2 != null)
-                duckList.get(i).object2.speed = _speed;
-        }
-        for(int i = 0; i < geeseList.size(); i++){
-            if(geeseList.get(i).object1 != null)
-                geeseList.get(i).object1.speed = _speed;
-            if(geeseList.get(i).object2 != null)
-                geeseList.get(i).object2.speed = _speed;
-        }
     }
 
     private void run(Animal animal){
@@ -304,8 +279,13 @@ public class FrameCanvas extends JFrame implements MouseMotionListener {
     }
 
     private void handleObjects(Animal animal){
+        int speed;
+        if(isSlow)
+                speed = 5;
+            else
+                speed = (score / 20) * 5 + 10;
         if(animal.object1 != null){
-            animal.object1.y = animal.object1.y + animal.object1.speed;
+            animal.object1.y = animal.object1.y + speed;
             int objectY = animal.object1.y;
             //System.out.println("x=" + _object.x + "\ty=" + animal.object.y + " width=" + animal.object.width + " height=" + animal.object.height);
             if(!((objectY >= basket.y && objectY <= basket.y + 20 )&& (animal.object1.x > basket.x && animal.object1.x < basket.x + basket.width))){
@@ -336,7 +316,7 @@ public class FrameCanvas extends JFrame implements MouseMotionListener {
             }
         }
         if(animal.object2 != null){
-            animal.object2.y = animal.object2.y + animal.object2.speed;
+            animal.object2.y = animal.object2.y + speed;
             int objectY = animal.object2.y;
             //System.out.println("x=" + _object.x + "\ty=" + animal.object.y + " width=" + animal.object.width + " height=" + animal.object.height);
             if(!((objectY >= basket.y && objectY <= basket.y + 20 )&& (animal.object2.x > basket.x && animal.object2.x < basket.x + basket.width))){
