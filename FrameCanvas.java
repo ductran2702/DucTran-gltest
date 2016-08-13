@@ -12,7 +12,7 @@ import java.util.Random;
  * The moving object (sprite) is defined in its own class, with its own
  * operations and can paint itself.
  */
-public class FrameCanvas extends JFrame {
+public class FrameCanvas extends JFrame implements MouseMotionListener {
     // Define constants for the various dimensions
     public static final int CANVAS_WIDTH = 800;
     public static final int CANVAS_HEIGHT = 600;
@@ -23,13 +23,16 @@ public class FrameCanvas extends JFrame {
     private int score;
     private int egg = 3;
     private int shit = 3;
-    private int speed = 10;
 
     private List<Hen> henList;           // Hen list
     private List<Duck> duckList;         // Duck list
     private List<Geese> geeseList;       // Geese list
 
     private Image basketImage;
+    private boolean isGameOver;
+    private boolean isSlowDown;
+    private int slowTime = 20;
+    private int exploseTime = 20;
 
     private static Font monoFont = new Font("Monospaced", Font.BOLD | Font.ITALIC, 36);
     private static Font bigFont = new Font("Monospaced", Font.BOLD , 80);
@@ -39,10 +42,9 @@ public class FrameCanvas extends JFrame {
         duckList = new ArrayList<Duck>();
         geeseList = new ArrayList<Geese>();
         // Construct a sprite given x, y, width, height, color
-        //sprite = new Sprite(CANVAS_WIDTH / 2 - 5, CANVAS_HEIGHT / 2 - 40, 10, 80, Color.RED);
         basket = new Basket(CANVAS_WIDTH / 2 - 5, CANVAS_HEIGHT * 5/6 - 80);
-        //hen = new Hen(CANVAS_WIDTH/2);
 
+        this.addMouseMotionListener(this);
         // Set up the custom drawing canvas (JPanel)
         canvas = new DrawCanvas();
         canvas.setPreferredSize(new Dimension(CANVAS_WIDTH, CANVAS_HEIGHT));
@@ -51,7 +53,6 @@ public class FrameCanvas extends JFrame {
         Container cp = getContentPane();
         cp.setLayout(new BorderLayout());
         cp.add(canvas, BorderLayout.CENTER);
-        //cp.add(btnPanel, BorderLayout.SOUTH);
 
         // "super" JFrame fires KeyEvent
         addKeyListener(new KeyAdapter() {
@@ -63,6 +64,8 @@ public class FrameCanvas extends JFrame {
                         case KeyEvent.VK_A: addHen(); break;
                         case KeyEvent.VK_S: addDuck(); break;
                         case KeyEvent.VK_D: addGeese(); break;
+                        case KeyEvent.VK_F: slowDown(); break;
+                        case KeyEvent.VK_SPACE: explose(); break;
                         //case KeyEvent.VK_UP:    moveUp();  break;
                         //case KeyEvent.VK_DOWN:  moveDown(); break;
                     }
@@ -78,7 +81,7 @@ public class FrameCanvas extends JFrame {
 
     // Helper method to move the sprite left
     private void moveLeft() {
-        if(basket.x <= 0)
+        if(basket.x <= 0 || isGameOver)
             return;
         // Save the current dimensions for repaint to erase the basket
         int savedX = basket.x;
@@ -91,7 +94,7 @@ public class FrameCanvas extends JFrame {
 
     // Helper method to move the sprite right
     private void moveRight() {
-        if(basket.x >= CANVAS_WIDTH - 100)
+        if(basket.x >= CANVAS_WIDTH - 100 || isGameOver)
             return;
         // Save the current dimensions for repaint to erase the sprite
         int savedX = basket.x;
@@ -120,78 +123,135 @@ public class FrameCanvas extends JFrame {
         run(geese);
     }
 
+    private void explose(){
+        for(int i = 0; i < henList.size(); i++){
+            if(henList.get(i).object1 != null)
+                henList.get(i).object1 = null;
+            if(henList.get(i).object2 != null)
+                henList.get(i).object2 = null;
+        }
+        for(int i = 0; i < duckList.size(); i++){
+            if(duckList.get(i).object1 != null)
+                duckList.get(i).object1 = null;
+            if(duckList.get(i).object2 != null)
+                duckList.get(i).object2 = null;
+        }
+        for(int i = 0; i < geeseList.size(); i++){
+            if(geeseList.get(i).object1 != null)
+                geeseList.get(i).object1 = null;
+            if(geeseList.get(i).object2 != null)
+                geeseList.get(i).object2 = null;
+        }
+    }
+
+    private void slowDown(){
+        if(isSlowDown)
+            return;
+        Thread thread = new Thread(){
+                public void run(){
+                    isSlowDown = true;
+                    int k = 0;
+                    while(true){
+                        if(isSlowDown){
+                            slowTime--;
+                            if(slowTime > 10)
+                                setObjectSpeed(true);
+                            else if(slowTime == 10)
+                                setObjectSpeed(false);
+                            else if(slowTime == 0) {
+                                isSlowDown = false;
+                                slowTime = 20;
+                                this.currentThread().interrupt();
+                            }
+                            try {
+                                this.sleep(1000);
+                            }catch(InterruptedException ex) {
+                                this.currentThread().interrupt();
+                            }
+                            k++;
+                        }
+                    }
+                }
+            };
+        thread.start();
+    }
+
+    private void setObjectSpeed(boolean isSlow){
+        int _speed;
+        if(isSlow)
+            _speed = 5;
+        else
+            _speed = (score / 20) * 5 + 10;
+        System.out.println("_speed=" + _speed);
+        for(int i = 0; i < henList.size(); i++){
+            if(henList.get(i).object1 != null)
+                henList.get(i).object1.speed = _speed;
+            if(henList.get(i).object2 != null)
+                henList.get(i).object2.speed = _speed;
+        }
+        for(int i = 0; i < duckList.size(); i++){
+            if(duckList.get(i).object1 != null)
+                duckList.get(i).object1.speed = _speed;
+            if(duckList.get(i).object2 != null)
+                duckList.get(i).object2.speed = _speed;
+
+        }
+        for(int i = 0; i < geeseList.size(); i++){
+            if(geeseList.get(i).object1 != null)
+                geeseList.get(i).object1.speed = _speed;
+            if(geeseList.get(i).object2 != null)
+                geeseList.get(i).object2.speed = _speed;
+        }
+    }
+
     private void run(Animal animal){
         Thread thread = new Thread(){
                 public void run(){
                     int k = 0;
                     int n = 0;
                     while(true){
-                        try {
-                            // run animal
-                            if(k % 10 == 0 ) {
-                                Random rand = new Random();
-                                n = rand.nextInt(2);
-                            }
-                            if(animal.x <= 0)
-                                n = 0;
-                            else if (animal.x >= FrameCanvas.CANVAS_WIDTH - 40)
-                                n = 1;
-                            if(n == 0)
-                                animal.x = animal.x + 10;
-                            else
-                                animal.x = animal.x - 10;
+                        // run animal
+                        if(k % 10 == 0 ) {
+                            Random rand = new Random();
+                            n = rand.nextInt(2);
+                        }
+                        if(animal.x <= 0)
+                            n = 0;
+                        else if (animal.x >= FrameCanvas.CANVAS_WIDTH - 40)
+                            n = 1;
+                        if(n == 0)
+                            animal.x = animal.x + 10;
+                        else
+                            animal.x = animal.x - 10;
+                        int savedX = animal.x;
+                        canvas.repaint(savedX, animal.y, animal.width * 2, animal.height);    // Clear old area to background
+                        canvas.repaint(animal.x, animal.y, animal.width, animal.height);     // Paint at new location
+                        // run animal end
 
-                            int savedX = animal.x;
-                            canvas.repaint(savedX, animal.y, animal.width * 2, animal.height);    // Clear old area to background
-                            canvas.repaint(animal.x, animal.y, animal.width, animal.height);     // Paint at new location
-                            // run animal end
-
-                            // drop object
-                            if(k % 50 == 0 ){
-                                Random rand = new Random();
-                                int d = rand.nextInt(2);
-                                if(d == 0)
-                                    animal.object = new Egg(animal.x, animal.y);
+                        // drop object
+                        //System.out.println("run() object1=" + animal.object1 + " object2=" + animal.object2 + " k=" + k);
+                        if(k % 50 == 0 && k != 0){
+                            Random rand = new Random();
+                            int d = rand.nextInt(2);
+                            if(d == 0) {
+                                if(animal.object1 != null)
+                                    animal.object2 = new Egg(animal.x, animal.y);
                                 else
-                                    animal.object = new Shit(animal.x, animal.y);
-                                k = 0;
+                                    animal.object1 = new Egg(animal.x, animal.y);
+                                //System.out.println("object1=" + animal.object1 + " object2=" + animal.object2);
+                            } else {
+                                if(animal.object1 != null)
+                                    animal.object2 = new Shit(animal.x, animal.y);
+                                else
+                                    animal.object1 = new Shit(animal.x, animal.y);
+                                //System.out.println("object1=" + animal.object1 + " object2=" + animal.object2);
                             }
-
-                            if(animal.object != null){
-                                animal.object.y = animal.object.y + speed;
-                                int objectY = animal.object.y;
-                                int objectX = animal.object.x;
-                                int objectW = animal.object.width;
-                                int objectH = animal.object.height;
-                                //System.out.println("objectX=" + objectX + " objectY=" + objectY + " objectW=" + objectW + " objectH=" + objectH);
-                                //System.out.println("basket.x=" + basket.x + " basket.y=" + basket.y + "basket.width=" + basket.width);
-                                if(!((objectY >= basket.y && objectY <= basket.y + 20 )&& (animal.object.x > basket.x && animal.object.x < basket.x + basket.width))){
-                                    //System.out.println("out");
-                                    canvas.repaint(animal.object.x, objectY, animal.object.width * 2, animal.object.height);    // Clear old area to background
-                                    canvas.repaint(animal.object.x, animal.object.y, animal.object.width, animal.object.height);     // Paint at new location
-                                    if(objectY >= CANVAS_HEIGHT * 5/6){
-                                        if(animal.object instanceof Egg && egg > 0){
-                                            egg--;
-                                        }
-                                        animal.object = null;
-                                    }
-                                } else {
-                                    //System.out.println("in");
-                                    //int objectX = animal.object.x;
-                                    //int objectW = animal.object.width;
-                                    //int objectH = animal.object.height;
-                                    if(animal.object instanceof Egg){
-                                        score++;
-                                    } else
-                                        shit--;
-                                    if(score % 20 == 0)
-                                        speed += 5;
-                                    animal.object = null;
-                                    canvas.repaint(objectX, objectY, objectW * 2, objectH);
-                                }
-                            }
-                            // drop object end
-                            this.sleep(100);        //100 milliseconds is one second.
+                            k = 0;
+                        }
+                        handleObjects(animal);
+                        // drop object end
+                        try {
+                            this.sleep(100);        //1000 milliseconds is one second.
                             k++;
                         }catch(InterruptedException ex) {
                             this.currentThread().interrupt();
@@ -201,6 +261,85 @@ public class FrameCanvas extends JFrame {
             };
         thread.start();
     }
+
+    private void handleObjects(Animal animal){
+        if(animal.object1 != null){
+            animal.object1.y = animal.object1.y + animal.object1.speed;
+            int objectY = animal.object1.y;
+            //System.out.println("x=" + _object.x + "\ty=" + animal.object.y + " width=" + animal.object.width + " height=" + animal.object.height);
+            if(!((objectY >= basket.y && objectY <= basket.y + 20 )&& (animal.object1.x > basket.x && animal.object1.x < basket.x + basket.width))){
+                //System.out.println("out");
+                canvas.repaint(animal.object1.x, objectY, animal.object1.width * 2, animal.object1.height);   // Clear old area to background
+                canvas.repaint(animal.object1.x, animal.object1.y, animal.object1.width, animal.object1.height);     // Paint at new location
+                if(objectY >= CANVAS_HEIGHT * 5/6){
+                    //System.out.println("end");
+                    if(animal.object1 instanceof Egg && egg > 0){
+                        egg--;
+                    }
+                    animal.object1 = null;
+                }
+            } else {
+                //System.out.println("in");
+                int objectX = animal.object1.x;
+                int objectW = animal.object1.width;
+                int objectH = animal.object1.height;
+                if(animal.object1 instanceof Egg){
+                    score++;
+                } else if(shit > 0)
+                    shit--;
+                if(score % 20 == 0){
+                    animal.object1.speed += 5;
+                }
+                animal.object1 = null;
+                canvas.repaint(objectX, objectY, objectW * 2, objectH);
+            }
+        }
+        if(animal.object2 != null){
+            animal.object2.y = animal.object2.y + animal.object2.speed;
+            int objectY = animal.object2.y;
+            //System.out.println("x=" + _object.x + "\ty=" + animal.object.y + " width=" + animal.object.width + " height=" + animal.object.height);
+            if(!((objectY >= basket.y && objectY <= basket.y + 20 )&& (animal.object2.x > basket.x && animal.object2.x < basket.x + basket.width))){
+                //System.out.println("out");
+                canvas.repaint(animal.object2.x, objectY, animal.object2.width * 2, animal.object2.height);   // Clear old area to background
+                canvas.repaint(animal.object2.x, animal.object2.y, animal.object2.width, animal.object2.height);     // Paint at new location
+                if(objectY >= CANVAS_HEIGHT * 5/6){
+                    //System.out.println("end");
+                    if(animal.object2 instanceof Egg && egg > 0){
+                        egg--;
+                    }
+                    animal.object2 = null;
+                }
+            } else {
+                //System.out.println("in");
+                int objectX = animal.object2.x;
+                int objectW = animal.object2.width;
+                int objectH = animal.object2.height;
+                if(animal.object2 instanceof Egg){
+                    score++;
+                } else if(shit > 0)
+                    shit--;
+                if(score % 20 == 0) {
+                    animal.object2.speed += 5;
+                }
+                animal.object2 = null;
+                canvas.repaint(objectX, objectY, objectW * 2, objectH);
+            }
+        }
+    }
+
+    public void mouseMoved(MouseEvent e) {
+        if(isGameOver)
+            return;
+        int x = e.getPoint().x;
+        int y = e.getPoint().y;
+
+        int savedX = basket.x;
+        basket.x = x - basket.image.getWidth()/2;
+        canvas.repaint(savedX, basket.y, basket.image.getWidth(), basket.image.getHeight()); // Clear old area to background
+        canvas.repaint(basket.x, basket.y, basket.image.getWidth(), basket.image.getHeight()); // Paint new location
+    }
+
+    public void mouseDragged(java.awt.event.MouseEvent e) {}
 
     // Define inner class DrawCanvas, which is a JPanel used for custom drawing
     class DrawCanvas extends JPanel {
@@ -214,34 +353,47 @@ public class FrameCanvas extends JFrame {
             g.setFont(monoFont);
             canvas.repaint(0, 0, 60, 60);
             g.drawString("Score:" + score, 30, 40);
-            g.setColor(Color.RED);
+            g.setColor(Color.YELLOW);
             canvas.repaint(500, 0, 60, 60);
             g.drawString("Egg:" + egg, 500, 40);
             canvas.repaint(300, 0, 60, 60);
             g.setColor(Color.BLACK);
             g.drawString("Shit:" + shit, 300, 40);
             if(egg <= 0 || shit <= 0){
+                isGameOver = true;
                 g.setFont(bigFont);
                 canvas.repaint();
                 g.setColor(Color.RED);
                 g.drawString("GAME OVER !!!", CANVAS_HEIGHT/5, CANVAS_WIDTH/3);
             }
+            g.setColor(Color.GREEN);
+            g.setFont(monoFont);
+            canvas.repaint(30, 550, 60, 60);
+            g.drawString("Slowable time:" + slowTime, 30, 550);
+            g.setColor(Color.RED);
+            canvas.repaint(450, 550, 60, 60);
+            g.drawString("Explose time:" + exploseTime, 450, 550);
             basket.paint(g);
-            //g.drawImage(basketImage, 0, 0, getWidth(), getHeight(), null);
             for(int i = 0; i < henList.size(); i++){
                 henList.get(i).paint(g);
-                if(henList.get(i).object != null)
-                    henList.get(i).object.paint(g);
+                if(henList.get(i).object1 != null)
+                    henList.get(i).object1.paint(g);
+                if(henList.get(i).object2 != null)
+                    henList.get(i).object2.paint(g);
             }
             for(int i = 0; i < duckList.size(); i++){
                 duckList.get(i).paint(g);
-                if(duckList.get(i).object != null)
-                    duckList.get(i).object.paint(g);
+                if(duckList.get(i).object1 != null)
+                    duckList.get(i).object1.paint(g);
+                if(duckList.get(i).object2 != null)
+                    duckList.get(i).object2.paint(g);
             }
             for(int i = 0; i < geeseList.size(); i++){
                 geeseList.get(i).paint(g);
-                if(geeseList.get(i).object != null)
-                    geeseList.get(i).object.paint(g);
+                if(geeseList.get(i).object1 != null)
+                    geeseList.get(i).object1.paint(g);
+                if(geeseList.get(i).object2 != null)
+                    geeseList.get(i).object2.paint(g);
             }
         }
     }

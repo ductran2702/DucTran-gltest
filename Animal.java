@@ -7,7 +7,8 @@ public class Animal
     protected int y;
     protected int width;
     protected int height;
-    protected DropObject object;
+    protected DropObject object1;
+    protected DropObject object2;
 
     public Animal() {
         this.x = FrameCanvas.CANVAS_WIDTH/2;
@@ -17,8 +18,8 @@ public class Animal
         Random rand = new Random();
         int d = rand.nextInt(2);
         if(d == 0)
-            object = new Egg(x, y);
+            object1 = new Egg(x, y);
         else
-            object = new Shit(x, y);
+            object1 = new Shit(x, y);
     }
 }
